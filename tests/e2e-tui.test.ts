@@ -280,6 +280,18 @@ describe('E2E TUI Tests', () => {
     // If we run again with all hunks reviewed, it should show "All hunks reviewed"
     expect(data3.statistics.totalReviewedHunks).toBeGreaterThanOrEqual(2);
   });
+
+  it('should exit automatically and show completion message when all hunks are reviewed', async () => {
+    const output = await runTUICommand(diffFile, storageDir, [
+      ' ',  // Mark hunk 1
+      ' ',  // Mark hunk 2
+      ' ',  // Mark hunk 3 (last one) - should trigger exit
+    ]);
+
+    // Should show completion message
+    expect(output).toContain('E2E_TEST_REVIEW_COMPLETE');
+    expect(output).toContain('Review complete! All hunks reviewed.');
+  });
 });
 
 /**
@@ -302,6 +314,7 @@ async function runTUICommand(
     ], {
       stdio: ['pipe', 'pipe', 'pipe'],
       cwd: join(import.meta.dir, '..'),
+      env: { ...process.env, NODE_ENV: 'test' },
     });
 
     let output = '';
@@ -323,28 +336,25 @@ async function runTUICommand(
         setTimeout(() => {
           proc.stdin?.write(key);
         }, delay);
-        delay += 100; // 100ms between keys
+        delay += 500; // 500ms between keys
       }
-
-      // Don't end stdin - blessed needs it open
     }, 800);
 
-    // Timeout handler
+    // Timeout handler - now just rejects, doesn't kill process
     const timer = setTimeout(() => {
-      proc.kill('SIGTERM');
+      // Don't kill the process, let it exit naturally
       reject(new Error(`Command timed out after ${timeout}ms`));
     }, timeout);
 
     proc.on('close', (code) => {
       clearTimeout(timer);
 
-      // Code 0 or null (killed) are both acceptable
-      // The TUI exits with 0 when quit normally
-      if (code === 0 || code === null || code === 143) {
+      // Only code 0 is acceptable for a successful exit
+      if (code === 0) {
         // Add small delay to ensure file writes complete
         setTimeout(() => {
           resolve(output + errorOutput);
-        }, 100);
+        }, 500); // Increased delay
       } else {
         reject(new Error(`Process exited with code ${code}\nOutput: ${output}\nError: ${errorOutput}`));
       }

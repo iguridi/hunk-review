@@ -97,8 +97,8 @@ export class TUIController {
     });
 
     // Quit
-    this.screen.key(['escape', 'q', 'C-c'], () => {
-      this.quit();
+    this.screen.key(['escape', 'q', 'C-c'], async () => {
+      await this.quit();
     });
 
     // Help
@@ -135,10 +135,15 @@ export class TUIController {
       this.diff.reviewedHunks++;
       this.diff.unreviewedHunks--;
 
-      this.render();
-
-      // Auto-advance to next unreviewed hunk
-      this.navigateToNextUnreviewed();
+      // If all hunks are reviewed, show completion and exit
+      if (this.diff.unreviewedHunks === 0) {
+        this.render(); // Final render to show all reviewed
+        await this.showCompletionAndQuit();
+      } else {
+        this.render();
+        // Auto-advance to next unreviewed hunk
+        this.navigateToNextUnreviewed();
+      }
     }
   }
 
@@ -311,7 +316,18 @@ Press any key to close this help...
     this.screen.render();
   }
 
-  private quit(): void {
+  private async showCompletionAndQuit(): Promise<void> {
+    const message = 'Review complete! All hunks reviewed.';
+    if (process.env.NODE_ENV === 'test') {
+      console.error('E2E_TEST_REVIEW_COMPLETE');
+      console.error(message);
+    } else {
+      console.log(message);
+    }
+    await this.quit();
+  }
+
+  private async quit(): Promise<void> {
     this.screen.destroy();
     process.exit(0);
   }

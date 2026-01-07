@@ -18,7 +18,8 @@
       "Bash(NODE_ENV=debug git diff:*)",
       "Bash(pkill:*)",
       "Bash(exit 0)",
-      "Bash(bash -c:*)"
+      "Bash(bash -c:*)",
+      "Bash(time bun test:*)"
     ]
   }
 }

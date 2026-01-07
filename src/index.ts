@@ -35,7 +35,12 @@ async function main() {
 
     // Read diff input
     const inputReader = new InputReader();
-    const diffText = await inputReader.read(options.file);
+    const { content: diffText, usedStdin } = await inputReader.read(options.file);
+
+    // If we read from stdin, reopen it for blessed keyboard input
+    if (usedStdin) {
+      await inputReader.reopenStdin();
+    }
 
     // Parse diff
     const diffParser = new DiffParser();

@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "bun build src/index.ts --outdir dist --target node --format esm",
-    "dev": "bun run src/index.ts",
+    "dev": "bin/reviewed-patch",
     "test": "bun test"
   },
   "dependencies": {

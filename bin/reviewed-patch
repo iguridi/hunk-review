@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Wrapper script for reviewed-patch that handles stdin piping properly
+
+set -e
+
+# Check if running with piped input
+if [ ! -t 0 ]; then
+  # Stdin is piped, save to temp file
+  TMPFILE=$(mktemp)
+  trap "rm -f '$TMPFILE'" EXIT
+
+  # Read stdin to temp file
+  cat > "$TMPFILE"
+
+  # Run with --file option
+  exec bun run "$(dirname "$0")/../src/index.ts" --file "$TMPFILE" "$@"
+else
+  # No piped input, pass through arguments
+  exec bun run "$(dirname "$0")/../src/index.ts" "$@"
+fi

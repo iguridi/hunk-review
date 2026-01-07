@@ -288,5 +288,11 @@ Press any key to close this help...
 
     // Initial render
     this.render();
+
+    // Keep the event loop alive - blessed needs this
+    return new Promise(() => {
+      // The promise never resolves - the app exits via quit()
+      // This keeps Node.js running to handle keyboard events
+    });
   }
 }

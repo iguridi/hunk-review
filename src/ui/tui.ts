@@ -324,11 +324,15 @@ Press any key to close this help...
     } else {
       console.log(message);
     }
-    await this.quit();
+    await this.quit(); // Await the potentially delayed quit
   }
 
   private async quit(): Promise<void> {
     this.screen.destroy();
+    if (process.env.NODE_ENV !== 'test') {
+      // Give a moment for console.log to flush in non-test environments
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
     process.exit(0);
   }
 

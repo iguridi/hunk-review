@@ -97,8 +97,8 @@ export class TUIController {
     });
 
     // Quit
-    this.screen.key(['escape', 'q', 'C-c'], async () => {
-      await this.quit();
+    this.screen.key(['escape', 'q', 'C-c'], () => {
+      this.quit();
     });
 
     // Help

@@ -13,7 +13,11 @@
       "Bash(git remote:*)",
       "Bash(cat:*)",
       "Bash(git diff:*)",
-      "Bash(/Users/iguridi/reviewed-patch/bin/reviewed-patch:*)"
+      "Bash(/Users/iguridi/reviewed-patch/bin/reviewed-patch:*)",
+      "Bash(bun run:*)",
+      "Bash(NODE_ENV=debug git diff:*)",
+      "Bash(pkill:*)",
+      "Bash(exit 0)"
     ]
   }
 }

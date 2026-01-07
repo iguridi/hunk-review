@@ -7,7 +7,7 @@ import { unlink, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-describe('ContentHasher', () => {
+describe.serial('ContentHasher', () => {
   it('should hash hunks consistently', () => {
     const hasher = new ContentHasher({ normalizeWhitespace: false });
 
@@ -66,7 +66,7 @@ describe('ContentHasher', () => {
   });
 });
 
-describe('DiffParser', () => {
+describe.serial('DiffParser', () => {
   it('should parse a simple unified diff', () => {
     const parser = new DiffParser();
     const diff = `diff --git a/file.ts b/file.ts
@@ -92,7 +92,7 @@ index 1234567..abcdefg 100644
   });
 });
 
-describe('ReviewStore', () => {
+describe.serial('ReviewStore', () => {
   it('should save and load reviews', async () => {
     const storageDir = join(tmpdir(), `test-review-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(storageDir, { recursive: true });
@@ -181,7 +181,7 @@ describe('ReviewStore', () => {
   });
 });
 
-describe('DiffProcessor', () => {
+describe.serial('DiffProcessor', () => {
   it('should process diff and mark review state', async () => {
     const storageDir = join(tmpdir(), `test-processor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     await mkdir(storageDir, { recursive: true });

@@ -5,6 +5,19 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
+async function waitForFile(filePath: string, maxWait = 100): Promise<boolean> {
+  const startTime = Date.now();
+  while (Date.now() - startTime < maxWait) {
+    if (existsSync(filePath)) {
+      // File exists, wait a bit more for write to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      return true;
+    }
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  return false;
+}
+
 const SAMPLE_DIFF = `diff --git a/test1.ts b/test1.ts
 index 1234567..abcdefg 100644
 --- a/test1.ts
@@ -28,7 +41,7 @@ index 2345678..bcdefgh 100644
  const z = 30;
 `;
 
-const TIMEOUT = 3000;
+const TIMEOUT = 1000;
 
 async function createTestEnv() {
   const testDir = join(tmpdir(), `tui-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -88,9 +101,10 @@ async function runTUICommand(
     proc.on('close', (code) => {
       clearTimeout(timer);
       if (code === 0) {
+        // Delay to ensure file writes complete
         setTimeout(() => {
           resolve(output + errorOutput);
-        }, 700);
+        }, 100);
       } else {
         reject(new Error(`Process exited with code ${code}\nOutput: ${output}\nError: ${errorOutput}`));
       }
@@ -111,7 +125,8 @@ describe.serial('E2E TUI Tests', () => {
     expect(Date.now() - startTime).toBeGreaterThan(50);
 
     const storagePath = join(storageDir, 'reviewed.json');
-    expect(existsSync(storagePath)).toBe(true);
+    const fileExists = await waitForFile(storagePath);
+    expect(fileExists).toBe(true);
     const data = JSON.parse(await Bun.file(storagePath).text());
     expect(data.statistics.totalReviewedHunks).toBeGreaterThanOrEqual(1);
   });
@@ -122,12 +137,14 @@ describe.serial('E2E TUI Tests', () => {
 
     // First run: mark first hunk
     await runTUICommand(diffFile, storageDir, [' ', 'q']);
+    await waitForFile(storagePath);
     const data1 = JSON.parse(await Bun.file(storagePath).text());
     const sessionId = Object.keys(data1.sessions)[0]!;
     expect(data1.sessions[sessionId]?.reviewedHashes.length).toBe(1);
 
     // Second run: should skip first hunk, mark second hunk
     await runTUICommand(diffFile, storageDir, [' ', 'q']);
+    await waitForFile(storagePath);
     const data2 = JSON.parse(await Bun.file(storagePath).text());
     expect(data2.sessions[sessionId]?.reviewedHashes.length).toBe(2);
   });

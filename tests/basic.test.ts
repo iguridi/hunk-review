@@ -3,7 +3,7 @@ import { ContentHasher } from '../src/hashing/hasher.ts';
 import { DiffParser } from '../src/diff/parser.ts';
 import { ReviewStore } from '../src/storage/ReviewStore.ts';
 import { DiffProcessor } from '../src/diff/processor.ts';
-import { unlink } from 'fs/promises';
+import { unlink, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
@@ -93,23 +93,10 @@ index 1234567..abcdefg 100644
 });
 
 describe('ReviewStore', () => {
-  let storageDir: string;
-  let store: ReviewStore;
-
-  beforeEach(() => {
-    storageDir = join(tmpdir(), `test-review-${Date.now()}`);
-    store = new ReviewStore(storageDir);
-  });
-
-  afterEach(async () => {
-    try {
-      await unlink(join(storageDir, 'reviewed.json'));
-    } catch {
-      // Ignore if file doesn't exist
-    }
-  });
-
   it('should save and load reviews', async () => {
+    const storageDir = join(tmpdir(), `test-review-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
     await store.load();
 
     const hash = 'test-hash-123';
@@ -125,6 +112,9 @@ describe('ReviewStore', () => {
   });
 
   it('should unmark hunks', async () => {
+    const storageDir = join(tmpdir(), `test-review-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
     await store.load();
 
     const hash = 'test-hash-456';
@@ -138,6 +128,9 @@ describe('ReviewStore', () => {
   });
 
   it('should track statistics', async () => {
+    const storageDir = join(tmpdir(), `test-review-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
     await store.load();
 
     await store.markHunkReviewed('hash1');
@@ -150,6 +143,9 @@ describe('ReviewStore', () => {
   });
 
   it('should reset session reviews only', async () => {
+    const storageDir = join(tmpdir(), `test-review-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
     await store.load();
 
     // Set up two sessions
@@ -186,28 +182,13 @@ describe('ReviewStore', () => {
 });
 
 describe('DiffProcessor', () => {
-  let storageDir: string;
-  let store: ReviewStore;
-  let hasher: ContentHasher;
-  let processor: DiffProcessor;
-
-  beforeEach(async () => {
-    storageDir = join(tmpdir(), `test-processor-${Date.now()}`);
-    store = new ReviewStore(storageDir);
-    await store.load();
-    hasher = new ContentHasher({ normalizeWhitespace: false });
-    processor = new DiffProcessor(store, hasher);
-  });
-
-  afterEach(async () => {
-    try {
-      await unlink(join(storageDir, 'reviewed.json'));
-    } catch {
-      // Ignore
-    }
-  });
-
   it('should process diff and mark review state', async () => {
+    const storageDir = join(tmpdir(), `test-processor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
+    await store.load();
+    const hasher = new ContentHasher({ normalizeWhitespace: false });
+    const processor = new DiffProcessor(store, hasher);
     const mockFiles = [
       {
         chunks: [
@@ -245,6 +226,12 @@ describe('DiffProcessor', () => {
   });
 
   it('should filter unreviewed hunks', async () => {
+    const storageDir = join(tmpdir(), `test-processor-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(storageDir, { recursive: true });
+    const store = new ReviewStore(storageDir);
+    await store.load();
+    const hasher = new ContentHasher({ normalizeWhitespace: false });
+    const processor = new DiffProcessor(store, hasher);
     const mockFiles = [
       {
         chunks: [

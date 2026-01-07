@@ -28,7 +28,7 @@ index 2345678..bcdefgh 100644
  const z = 30;
 `;
 
-const TIMEOUT = 1000;
+const TIMEOUT = 3000;
 
 async function createTestEnv() {
   const testDir = join(tmpdir(), `tui-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -90,7 +90,7 @@ async function runTUICommand(
       if (code === 0) {
         setTimeout(() => {
           resolve(output + errorOutput);
-        }, 200);
+        }, 700);
       } else {
         reject(new Error(`Process exited with code ${code}\nOutput: ${output}\nError: ${errorOutput}`));
       }
@@ -103,7 +103,7 @@ async function runTUICommand(
   });
 }
 
-describe('E2E TUI Tests', () => {
+describe.serial('E2E TUI Tests', () => {
   it('should launch, mark reviews, and persist without immediate exit', async () => {
     const { diffFile, storageDir } = await createTestEnv();
     const startTime = Date.now();

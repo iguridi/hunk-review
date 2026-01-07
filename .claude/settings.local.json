@@ -19,7 +19,11 @@
       "Bash(pkill:*)",
       "Bash(exit 0)",
       "Bash(bash -c:*)",
-      "Bash(time bun test:*)"
+      "Bash(time bun test:*)",
+      "Bash(for:*)",
+      "Bash(do echo \"Run $i:\")",
+      "Bash(exit 1)",
+      "Bash(done)"
     ]
   }
 }

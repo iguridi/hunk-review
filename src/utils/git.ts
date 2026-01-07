@@ -54,26 +54,7 @@ export class GitHelper {
   }
 
   private static getRepoName(gitDir: string): string {
-    try {
-      // Try to get from remote origin
-      const remote = execSync('git remote get-url origin', {
-        cwd: gitDir,
-        encoding: 'utf-8',
-        stdio: ['pipe', 'pipe', 'ignore'],
-      }).trim();
-
-      // Extract repo name from URL
-      // e.g., git@github.com:user/repo.git -> repo
-      // e.g., https://github.com/user/repo.git -> repo
-      const match = remote.match(/\/([^\/]+?)(\.git)?$/);
-      if (match && match[1]) {
-        return match[1];
-      }
-    } catch {
-      // Fall back to directory name
-    }
-
-    // Use directory name as fallback
+    // Use directory name
     return gitDir.split('/').pop() || 'unknown';
   }
 

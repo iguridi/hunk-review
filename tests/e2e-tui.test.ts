@@ -290,7 +290,7 @@ describe('E2E TUI Tests', () => {
 
     // Should show completion message
     expect(output).toContain('E2E_TEST_REVIEW_COMPLETE');
-    expect(output).toContain('Review complete! All hunks reviewed.');
+    expect(output).toContain('All hunks reviewed.');
   });
 });
 

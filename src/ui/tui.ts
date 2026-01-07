@@ -260,6 +260,11 @@ export class TUIController {
   }
 
   private updateStatusBar(): void {
+    if (this.diff.unreviewedHunks === 0) {
+      this.statusBar.setContent('');
+      return;
+    }
+
     const current = this.currentHunkIndex + 1;
     const total = this.allHunks.length;
     const reviewed = this.diff.reviewedHunks;
@@ -317,7 +322,7 @@ Press any key to close this help...
   }
 
   private async showCompletionAndQuit(): Promise<void> {
-    const message = 'Review complete! All hunks reviewed.';
+    const message = 'All hunks reviewed.';
     if (process.env.NODE_ENV === 'test') {
       console.error('E2E_TEST_REVIEW_COMPLETE');
       console.error(message);

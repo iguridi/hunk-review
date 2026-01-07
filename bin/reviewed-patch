@@ -13,7 +13,14 @@ if [ ! -t 0 ]; then
   cat > "$TMPFILE"
 
   # Run with --file option
-  exec bun run "$(dirname "$0")/../src/index.ts" --file "$TMPFILE" "$@"
+  # Try to redirect stdin from /dev/tty for blessed (if available)
+  if [ -r /dev/tty ]; then
+    exec bun run "$(dirname "$0")/../src/index.ts" --file "$TMPFILE" "$@" < /dev/tty
+  else
+    # In test/non-interactive environments, /dev/tty may not be available
+    # Just run without stdin redirection (tests handle this differently)
+    exec bun run "$(dirname "$0")/../src/index.ts" --file "$TMPFILE" "$@"
+  fi
 else
   # No piped input, pass through arguments
   exec bun run "$(dirname "$0")/../src/index.ts" "$@"

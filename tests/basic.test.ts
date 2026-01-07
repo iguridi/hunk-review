@@ -148,6 +148,41 @@ describe('ReviewStore', () => {
     expect(stats.totalReviewedHunks).toBe(2);
     expect(stats.lastUpdated).not.toBeNull();
   });
+
+  it('should reset session reviews only', async () => {
+    await store.load();
+
+    // Set up two sessions
+    store.setSession('repo1:main', 'repo1', 'main');
+    await store.markHunkReviewed('hash1', 'context1');
+    await store.markHunkReviewed('hash2', 'context2');
+
+    store.setSession('repo1:feature', 'repo1', 'feature');
+    await store.markHunkReviewed('hash3', 'context3');
+    await store.markHunkReviewed('hash1', 'context1'); // Same hunk, different session
+
+    // Verify both sessions have reviews
+    expect(store.hasReviewedInSession('hash1', 'repo1:main')).toBe(true);
+    expect(store.hasReviewedInSession('hash2', 'repo1:main')).toBe(true);
+    expect(store.hasReviewedInSession('hash3', 'repo1:feature')).toBe(true);
+    expect(store.hasReviewedInSession('hash1', 'repo1:feature')).toBe(true);
+
+    // Reset feature session
+    await store.resetSession();
+
+    // Verify feature session is cleared
+    expect(store.hasReviewedInSession('hash3', 'repo1:feature')).toBe(false);
+    expect(store.hasReviewedInSession('hash1', 'repo1:feature')).toBe(false);
+
+    // Verify main session is preserved
+    expect(store.hasReviewedInSession('hash1', 'repo1:main')).toBe(true);
+    expect(store.hasReviewedInSession('hash2', 'repo1:main')).toBe(true);
+
+    // hash1 should still exist globally (reviewed in main)
+    // hash3 should be removed (only reviewed in feature)
+    const stats = store.getStats();
+    expect(stats.totalReviewedHunks).toBe(2); // hash1 and hash2 remain
+  });
 });
 
 describe('DiffProcessor', () => {

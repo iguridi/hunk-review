@@ -17,6 +17,7 @@ A fully functional TypeScript CLI tool for interactively reviewing diff patches 
 - ✅ **Mark/unmark** - Space to mark, 'u' to unmark hunks
 - ✅ **Help modal** - Built-in help with '?' key
 - ✅ **Statistics** - Track total reviews and per-session progress
+- ✅ **Session reset** - Clear reviews for current branch only with `--reset-session`
 
 ### Technical Implementation
 - ✅ **Bun runtime** - Fast TypeScript execution
@@ -27,12 +28,12 @@ A fully functional TypeScript CLI tool for interactively reviewing diff patches 
 
 ## Test Coverage
 
-**All 20 tests passing ✅**
+**All 21 tests passing ✅**
 
-### Unit Tests (9 tests)
+### Unit Tests (10 tests)
 - ContentHasher (3 tests)
 - DiffParser (2 tests)
-- ReviewStore (2 tests)
+- ReviewStore (4 tests) - includes session reset test
 - DiffProcessor (2 tests)
 
 ### E2E TUI Tests (11 tests)
@@ -66,6 +67,11 @@ bin/reviewed-patch --stats
 ### Reset all reviews
 ```bash
 bin/reviewed-patch --reset
+```
+
+### Reset current session only
+```bash
+bin/reviewed-patch --reset-session
 ```
 
 ## Architecture

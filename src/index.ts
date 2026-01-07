@@ -43,6 +43,14 @@ async function main() {
       process.exit(0);
     }
 
+    if (options.resetSession) {
+      await reviewStore.resetSession();
+      if (session) {
+        console.log(`Reviews cleared for session: ${session.repoName} (${session.branchName})`);
+      }
+      process.exit(0);
+    }
+
     // Read diff input
     const inputReader = new InputReader();
     const { content: diffText, usedStdin } = await inputReader.read(options.file);

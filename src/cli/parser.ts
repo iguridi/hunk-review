@@ -4,6 +4,7 @@ export interface CLIOptions {
   file?: string;
   storageDir?: string;
   reset?: boolean;
+  resetSession?: boolean;
   stats?: boolean;
 }
 
@@ -24,7 +25,8 @@ export class CLIParser {
     this.program
       .option('-f, --file <path>', 'Read diff from file instead of stdin')
       .option('-s, --storage-dir <path>', 'Override storage directory')
-      .option('--reset', 'Clear all reviewed hunks')
+      .option('--reset', 'Clear all reviewed hunks (all sessions)')
+      .option('--reset-session', 'Clear reviewed hunks for current session only')
       .option('--stats', 'Show review statistics');
   }
 
@@ -36,6 +38,7 @@ export class CLIParser {
       file: options.file,
       storageDir: options.storageDir,
       reset: options.reset,
+      resetSession: options.resetSession,
       stats: options.stats,
     };
   }

@@ -32,8 +32,11 @@ git diff --cached | reviewed-patch
 # Show statistics
 reviewed-patch --stats
 
-# Reset all reviews
+# Reset all reviews (all sessions)
 reviewed-patch --reset
+
+# Reset reviews for current session only (current branch)
+reviewed-patch --reset-session
 ```
 
 ## Key Bindings
@@ -49,7 +52,40 @@ reviewed-patch --reset
 
 ## How It Works
 
+### Content-Based Hashing
+
 Each hunk is hashed based on its content (all added/deleted lines). The hash is stored when you mark a hunk as reviewed. On subsequent runs, hunks with matching hashes are automatically marked as reviewed and can be filtered from view.
+
+### Session-Based Tracking
+
+Reviews are scoped to sessions defined as `{repoName}:{branchName}`. This means:
+
+- **Same branch**: Reviewed hunks are automatically hidden
+- **Different branch**: All hunks appear as unreviewed (fresh start)
+- **Switch back**: Previous reviews on that branch are restored
+
+Example:
+```bash
+# On main branch - review some hunks
+git checkout main
+git diff | reviewed-patch
+# Mark hunks 1, 2, 3
+
+# Switch to feature branch - fresh view
+git checkout feature
+git diff | reviewed-patch
+# All hunks show as unreviewed
+
+# Switch back to main - reviews restored
+git checkout main
+git diff | reviewed-patch
+# Hunks 1, 2, 3 are still marked as reviewed
+```
+
+### Resetting Reviews
+
+- `--reset`: Clears ALL reviews across ALL sessions (global reset)
+- `--reset-session`: Clears reviews ONLY for your current branch (other branches unaffected)
 
 ## Development
 

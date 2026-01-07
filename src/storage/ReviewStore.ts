@@ -175,6 +175,45 @@ export class ReviewStore {
   }
 
   /**
+   * Reset reviews for current session only
+   */
+  async resetSession(): Promise<void> {
+    if (!this.currentSessionId) {
+      console.warn('No session detected. Use --reset to clear all reviews.');
+      return;
+    }
+
+    const session = this.data.sessions[this.currentSessionId];
+    if (!session) {
+      console.log('No reviews found for current session.');
+      return;
+    }
+
+    // Get hashes reviewed in this session
+    const hashesToRemove = [...session.reviewedHashes];
+
+    // Remove this session from each hunk's session list
+    for (const hash of hashesToRemove) {
+      const hunk = this.data.reviewedHunks[hash];
+      if (hunk) {
+        // Remove session from hunk's sessions array
+        hunk.sessions = hunk.sessions.filter(s => s !== this.currentSessionId);
+
+        // If no sessions left, remove the hunk entirely
+        if (hunk.sessions.length === 0) {
+          delete this.data.reviewedHunks[hash];
+          this.data.statistics.totalReviewedHunks--;
+        }
+      }
+    }
+
+    // Remove the session
+    delete this.data.sessions[this.currentSessionId];
+
+    await this.save();
+  }
+
+  /**
    * Ensure the storage directory exists
    */
   private async ensureDirectoryExists(): Promise<void> {

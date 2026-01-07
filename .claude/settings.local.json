@@ -11,7 +11,9 @@
       "Bash(bin/reviewed-patch:*)",
       "Bash(git rev-parse:*)",
       "Bash(git remote:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git diff:*)",
+      "Bash(/Users/iguridi/reviewed-patch/bin/reviewed-patch:*)"
     ]
   }
 }

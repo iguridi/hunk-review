@@ -59,7 +59,7 @@ async function main() {
     // Process diff with review state
     const hasher = new ContentHasher({ normalizeWhitespace: false });
     const processor = new DiffProcessor(reviewStore, hasher);
-    const processedDiff = await processor.process(files);
+    let processedDiff = await processor.process(files);
 
     // Check if there are any hunks to review
     if (processedDiff.totalHunks === 0) {
@@ -72,6 +72,9 @@ async function main() {
       console.log(`Total: ${processedDiff.totalHunks} hunks`);
       process.exit(0);
     }
+
+    // Filter to only show unreviewed hunks
+    processedDiff = processor.filterUnreviewed(processedDiff);
 
     // Start TUI
     const tui = new TUIController(processedDiff, reviewStore, hasher);

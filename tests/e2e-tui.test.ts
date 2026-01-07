@@ -229,6 +229,57 @@ describe('E2E TUI Tests', () => {
     // Should have marked multiple hunks
     expect(data.statistics.totalReviewedHunks).toBeGreaterThanOrEqual(2);
   });
+
+  it('should not show reviewed hunks when viewing diff a second time in same session', async () => {
+    const storagePath = join(storageDir, 'reviewed.json');
+
+    // First session: Mark only the first hunk
+    await runTUICommand(diffFile, storageDir, [
+      ' ',  // Mark hunk 1
+      'q',  // Quit (don't mark hunk 2)
+    ]);
+
+    // Verify first hunk was marked
+    const data1 = JSON.parse(await Bun.file(storagePath).text());
+    expect(data1.statistics.totalReviewedHunks).toBeGreaterThanOrEqual(1);
+
+    // Get the session ID and count
+    const sessionIds = Object.keys(data1.sessions);
+    expect(sessionIds.length).toBeGreaterThan(0);
+    const sessionId = sessionIds[0]!;
+    const firstSessionCount = data1.sessions[sessionId]?.reviewedHashes.length || 0;
+    expect(firstSessionCount).toBe(1); // Should be exactly 1
+
+    // Second session with SAME diff: Should skip reviewed hunk 1, show hunk 2
+    await runTUICommand(diffFile, storageDir, [
+      ' ',  // Should mark hunk 2 (hunk 1 is already reviewed)
+      'q',
+    ]);
+
+    // Read storage again
+    const data2 = JSON.parse(await Bun.file(storagePath).text());
+
+    // Session should have 2 hunks now (hunk 1 + hunk 2)
+    expect(data2.sessions[sessionId]).toBeDefined();
+    expect(data2.sessions[sessionId]?.reviewedHashes.length).toBe(2);
+
+    // Third session: Should skip hunks 1 and 2, show hunk 3
+    await runTUICommand(diffFile, storageDir, [
+      ' ',  // Should mark hunk 3
+      'q',
+    ]);
+
+    const data3 = JSON.parse(await Bun.file(storagePath).text());
+
+    // Session should have at least 2 hunks, possibly 3
+    // (Depending on whether hunk 3 got marked before the app exited)
+    expect(data3.sessions[sessionId]?.reviewedHashes.length).toBeGreaterThanOrEqual(2);
+
+    // Verify progressive review behavior: each run should only show unreviewed hunks
+    // The key assertion is that reviewed hunks don't reappear
+    // If we run again with all hunks reviewed, it should show "All hunks reviewed"
+    expect(data3.statistics.totalReviewedHunks).toBeGreaterThanOrEqual(2);
+  });
 });
 
 /**

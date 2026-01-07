@@ -169,8 +169,43 @@ export class TUIController {
   private render(): void {
     const content = this.buildContent();
     this.diffView.setContent(content);
+    this.scrollToCurrentHunk();
     this.updateStatusBar();
     this.screen.render();
+  }
+
+  private scrollToCurrentHunk(): void {
+    // Calculate line number of current hunk in the content
+    let lineNumber = 0;
+    let globalHunkIndex = 0;
+
+    for (const file of this.diff.files) {
+      lineNumber += 2; // File header + blank line
+
+      for (const processedHunk of file.hunks) {
+        if (globalHunkIndex === this.currentHunkIndex) {
+          // Found current hunk, scroll to it
+          // Use setImmediate to scroll after render completes
+          setImmediate(() => {
+            try {
+              this.diffView.setScrollPerc(0); // Reset first
+              this.diffView.setScroll(lineNumber);
+              this.screen.render();
+            } catch (error) {
+              // Ignore scroll errors - can happen during initial render
+            }
+          });
+          return;
+        }
+
+        // Count lines in this hunk
+        lineNumber += 1; // Hunk header
+        lineNumber += processedHunk.chunk.changes.length;
+        lineNumber += 1; // Blank line after hunk
+
+        globalHunkIndex++;
+      }
+    }
   }
 
   private buildContent(): string {

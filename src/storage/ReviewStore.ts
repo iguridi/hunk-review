@@ -2,17 +2,34 @@ import { existsSync } from 'fs';
 import { mkdir, readFile, writeFile } from 'fs/promises';
 import { dirname, join } from 'path';
 import { homedir } from 'os';
-import type { ReviewData, ReviewStats } from './schema.ts';
+import type { ReviewData, ReviewStats, SessionData } from './schema.ts';
 import { createEmptyReviewData } from './schema.ts';
 
 export class ReviewStore {
   private data: ReviewData;
   private storageFile: string;
+  private currentSessionId: string | null = null;
 
-  constructor(storageDir?: string) {
+  constructor(storageDir?: string, sessionId?: string | null) {
     const baseDir = storageDir || join(homedir(), '.reviewed-patch');
     this.storageFile = join(baseDir, 'reviewed.json');
     this.data = createEmptyReviewData();
+    this.currentSessionId = sessionId || null;
+  }
+
+  setSession(sessionId: string, repoName: string, branchName: string): void {
+    this.currentSessionId = sessionId;
+
+    // Initialize session if it doesn't exist
+    if (!this.data.sessions[sessionId]) {
+      this.data.sessions[sessionId] = {
+        sessionId,
+        repoName,
+        branchName,
+        reviewedHashes: [],
+        lastUpdated: new Date().toISOString(),
+      };
+    }
   }
 
   /**
@@ -36,6 +53,11 @@ export class ReviewStore {
       }
 
       this.data = parsed;
+
+      // Ensure sessions object exists (for backwards compatibility)
+      if (!this.data.sessions) {
+        this.data.sessions = {};
+      }
     } catch (error) {
       console.error('Failed to load review data:', error);
       // Continue with empty data
@@ -60,10 +82,24 @@ export class ReviewStore {
   }
 
   /**
-   * Check if a hunk has been reviewed
+   * Check if a hunk has been reviewed (globally or in current session)
    */
   hasReviewedHunk(hash: string): boolean {
+    // If we have a session, only check if reviewed in current session
+    if (this.currentSessionId) {
+      return this.hasReviewedInSession(hash, this.currentSessionId);
+    }
+
+    // Otherwise check global review status
     return hash in this.data.reviewedHunks;
+  }
+
+  /**
+   * Check if reviewed in a specific session
+   */
+  hasReviewedInSession(hash: string, sessionId: string): boolean {
+    const session = this.data.sessions[sessionId];
+    return session ? session.reviewedHashes.includes(hash) : false;
   }
 
   /**
@@ -72,10 +108,16 @@ export class ReviewStore {
   async markHunkReviewed(hash: string, context?: string): Promise<void> {
     const now = new Date().toISOString();
 
+    // Update global review data
     if (this.data.reviewedHunks[hash]) {
       // Update existing entry
       this.data.reviewedHunks[hash]!.lastReviewedAt = now;
       this.data.reviewedHunks[hash]!.reviewCount++;
+
+      // Add session if not already there
+      if (this.currentSessionId && !this.data.reviewedHunks[hash]!.sessions.includes(this.currentSessionId)) {
+        this.data.reviewedHunks[hash]!.sessions.push(this.currentSessionId);
+      }
     } else {
       // Create new entry
       this.data.reviewedHunks[hash] = {
@@ -83,8 +125,18 @@ export class ReviewStore {
         lastReviewedAt: now,
         reviewCount: 1,
         context,
+        sessions: this.currentSessionId ? [this.currentSessionId] : [],
       };
       this.data.statistics.totalReviewedHunks++;
+    }
+
+    // Update session-specific data
+    if (this.currentSessionId) {
+      const session = this.data.sessions[this.currentSessionId];
+      if (session && !session.reviewedHashes.includes(hash)) {
+        session.reviewedHashes.push(hash);
+        session.lastUpdated = now;
+      }
     }
 
     await this.save();

@@ -7,6 +7,7 @@ import { DiffProcessor } from './diff/processor.ts';
 import { ReviewStore } from './storage/ReviewStore.ts';
 import { ContentHasher } from './hashing/hasher.ts';
 import { TUIController } from './ui/tui.ts';
+import { GitHelper } from './utils/git.ts';
 
 async function main() {
   try {
@@ -14,9 +15,18 @@ async function main() {
     const cliParser = new CLIParser();
     const options = cliParser.parse(process.argv);
 
-    // Initialize components
+    // Detect current git session (repo + branch)
+    const session = GitHelper.getCurrentSession();
+
+    // Initialize components with session
     const reviewStore = new ReviewStore(options.storageDir);
     await reviewStore.load();
+
+    // Set session if detected
+    if (session) {
+      reviewStore.setSession(session.sessionId, session.repoName, session.branchName);
+      console.log(`Session: ${session.repoName} (${session.branchName})`);
+    }
 
     // Handle special commands
     if (options.stats) {

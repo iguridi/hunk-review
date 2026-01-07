@@ -8,7 +8,10 @@
       "Bash(bun test:*)",
       "Bash(tree:*)",
       "Bash(echo:*)",
-      "Bash(bin/reviewed-patch:*)"
+      "Bash(bin/reviewed-patch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git remote:*)",
+      "Bash(cat:*)"
     ]
   }
 }

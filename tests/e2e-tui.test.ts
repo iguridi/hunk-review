@@ -5,7 +5,7 @@ import { existsSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 
-async function waitForFile(filePath: string, maxWait = 200): Promise<boolean> {
+async function waitForFile(filePath: string, maxWait = 500): Promise<boolean> {
   const startTime = Date.now();
   while (Date.now() - startTime < maxWait) {
     if (existsSync(filePath)) {

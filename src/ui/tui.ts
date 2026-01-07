@@ -322,6 +322,7 @@ Press any key to close this help...
   }
 
   private async showCompletionAndQuit(): Promise<void> {
+    this.screen.destroy(); // Destroy the screen first
     const message = 'All hunks reviewed.';
     if (process.env.NODE_ENV === 'test') {
       console.error('E2E_TEST_REVIEW_COMPLETE');
@@ -333,7 +334,6 @@ Press any key to close this help...
   }
 
   private async quit(): Promise<void> {
-    this.screen.destroy();
     if (process.env.NODE_ENV !== 'test') {
       // Give a moment for console.log to flush in non-test environments
       await new Promise(resolve => setTimeout(resolve, 50));

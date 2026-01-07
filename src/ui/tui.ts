@@ -29,9 +29,6 @@ export class TUIController {
 
     // Setup keyboard handlers
     this.setupKeyBindings();
-
-    // Initial render
-    this.render();
   }
 
   private createDiffView(): blessed.Widgets.BoxElement {

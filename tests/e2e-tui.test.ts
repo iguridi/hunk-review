@@ -73,6 +73,43 @@ describe('E2E TUI Tests', () => {
     expect(output.length).toBeGreaterThan(10);
   });
 
+  it('should not exit immediately and accept user input', async () => {
+    // This test ensures the TUI stays open long enough to receive input
+    // If it exits immediately, the timeout will trigger before the 'q' is sent
+    const startTime = Date.now();
+
+    const output = await runTUICommand(diffFile, storageDir, [
+      'j', // Navigate down
+      'k', // Navigate up
+      'q', // Quit
+    ]);
+
+    const duration = Date.now() - startTime;
+
+    // Should take at least the initial delay (800ms) + key delays (500ms * 3)
+    // If it exits immediately, it would complete much faster
+    expect(duration).toBeGreaterThan(800);
+
+    // Should have output from TUI
+    expect(output.length).toBeGreaterThan(0);
+  });
+
+  it('should allow marking a hunk before exiting', async () => {
+    // This test specifically checks that the TUI doesn't exit before user can interact
+    // Tests the regression where render() in constructor caused immediate exit
+    await runTUICommand(diffFile, storageDir, [
+      ' ',  // Mark first hunk
+      'q',  // Quit
+    ]);
+
+    // Verify the hunk was actually marked (proves TUI stayed open)
+    const storagePath = join(storageDir, 'reviewed.json');
+    expect(existsSync(storagePath)).toBe(true);
+
+    const data = JSON.parse(await Bun.file(storagePath).text());
+    expect(data.statistics.totalReviewedHunks).toBeGreaterThan(0);
+  });
+
   it('should navigate between hunks with arrow keys', async () => {
     const output = await runTUICommand(diffFile, storageDir, [
       '\x1B[B', // Down arrow (next hunk)

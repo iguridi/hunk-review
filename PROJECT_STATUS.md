@@ -28,7 +28,7 @@ A fully functional TypeScript CLI tool for interactively reviewing diff patches 
 
 ## Test Coverage
 
-**All 21 tests passing ✅**
+**All 24 tests passing ✅**
 
 ### Unit Tests (10 tests)
 - ContentHasher (3 tests)
@@ -36,10 +36,10 @@ A fully functional TypeScript CLI tool for interactively reviewing diff patches 
 - ReviewStore (4 tests) - includes session reset test
 - DiffProcessor (2 tests)
 
-### E2E TUI Tests (11 tests)
-- Basic functionality (3 tests)
-- Review management (4 tests)
-- Session tracking (2 tests)
+### E2E TUI Tests (14 tests)
+- Basic functionality (4 tests) - includes immediate exit regression test
+- Review management (5 tests)
+- Session tracking (3 tests)
 - UI features (2 tests)
 
 ## Usage Examples

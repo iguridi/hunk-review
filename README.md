@@ -41,51 +41,31 @@ reviewed-patch --reset-session
 
 ## Key Bindings
 
-- `↑/k` - Previous unreviewed hunk
-- `↓/j` - Next unreviewed hunk
-- `Space` - Mark current hunk as reviewed
-- `a` - Mark all hunks in current file
-- `u` - Unmark current hunk
-- `r` - Reset file reviews
-- `?` - Show help
-- `q/Esc` - Quit
+| Key(s) | Action |
+| --- | --- |
+| `↓`, `j` | Navigate to the next hunk |
+| `↑`, `k` | Navigate to the previous hunk |
+| `Space` | Mark the current hunk as reviewed and auto-advance to the next unreviewed one |
+| `u` | Unmark the current hunk as reviewed |
+| `?` | Show the help screen |
+| `q`, `Esc`| Quit the application |
 
-## How It Works
+## Workflow
 
-### Content-Based Hashing
+### Review Flow
+- When you open a diff, the TUI will display all hunks that have not been reviewed in the current session.
+- Use the navigation keys to move between hunks.
+- When you mark a hunk as reviewed with `Space`, it is saved to your review store, and the TUI automatically advances to the next unreviewed hunk.
+- Hunks that are already reviewed from previous sessions will not be shown.
 
-Each hunk is hashed based on its content (all added/deleted lines). The hash is stored when you mark a hunk as reviewed. On subsequent runs, hunks with matching hashes are automatically marked as reviewed and can be filtered from view.
+### Completion
+- When all hunks in the diff have been reviewed, the application will automatically exit and display a "All hunks reviewed." message.
 
 ### Session-Based Tracking
-
-Reviews are scoped to sessions defined as `{repoName}:{branchName}`. This means:
-
-- **Same branch**: Reviewed hunks are automatically hidden
-- **Different branch**: All hunks appear as unreviewed (fresh start)
-- **Switch back**: Previous reviews on that branch are restored
-
-Example:
-```bash
-# On main branch - review some hunks
-git checkout main
-git diff | reviewed-patch
-# Mark hunks 1, 2, 3
-
-# Switch to feature branch - fresh view
-git checkout feature
-git diff | reviewed-patch
-# All hunks show as unreviewed
-
-# Switch back to main - reviews restored
-git checkout main
-git diff | reviewed-patch
-# Hunks 1, 2, 3 are still marked as reviewed
-```
-
-### Resetting Reviews
-
-- `--reset`: Clears ALL reviews across ALL sessions (global reset)
-- `--reset-session`: Clears reviews ONLY for your current branch (other branches unaffected)
+Reviews are scoped to sessions, which are determined by your current Git branch. This means:
+- When you review hunks on a branch, they are tied to that branch's session.
+- If you switch to a new branch, you get a fresh review session where no hunks are marked as reviewed.
+- If you switch back to a branch you were working on previously, your reviews for that branch are restored.
 
 ## Development
 
